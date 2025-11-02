@@ -179,9 +179,59 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
-    <script src="runtime-config.js"></script>
+        <!-- Load Supabase JS with a local fallback and graceful message when CDN is blocked -->
+        <script>
+            (function(){
+                function loadScript(url, onload, onerror){
+                    var s = document.createElement('script');
+                    s.src = url;
+                    s.onload = onload;
+                    s.onerror = onerror;
+                    document.head.appendChild(s);
+                }
+
+                // Try CDN first
+                    var cdnCandidates = [
+                        // confirmed working UMD path
+                        'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+                        // unpkg redirect (fallback)
+                        'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+                    ];
+                    loadScript(cdnCandidates[0], function(){
+                    console.log('Supabase CDN loaded');
+                }, function(){
+                    console.warn('Failed to load supabase-js from CDN. Attempting local fallback.');
+
+                    // Show a visible banner to the developer/user so it's clear why auth fails
+                    try {
+                        var banner = document.createElement('div');
+                        banner.style.position = 'fixed';
+                        banner.style.left = '0';
+                        banner.style.right = '0';
+                        banner.style.top = '0';
+                        banner.style.zIndex = '99999';
+                        banner.style.background = '#ffcc00';
+                        banner.style.color = '#000';
+                        banner.style.padding = '10px';
+                        banner.style.fontSize = '14px';
+                        banner.style.textAlign = 'center';
+                        banner.textContent = '警告：未能从 CDN 加载 supabase-js，身份验证将无法工作。请将 supabase-js 放到 /libs/supabase-js.min.js 或在允许外部网络的环境中打开页面。';
+                        document.documentElement.appendChild(banner);
+                    } catch (e) {
+                        console.warn('Could not show CDN warning banner', e);
+                    }
+
+                    // Try to load a local fallback file if present
+                    loadScript('/libs/supabase-js.min.js', function(){
+                        console.log('Loaded local supabase-js fallback');
+                    }, function(){
+                        console.warn('Local supabase-js fallback not found at /libs/supabase-js.min.js');
+                    });
+                });
+            })();
+        </script>
+        <script src="config.js"></script>
+        <script src="runtime-config.js"></script>
     <script src="cache-utils.js"></script>
     <script src="auth.js"></script>
     <script src="chat.js"></script>

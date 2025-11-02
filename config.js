@@ -2,10 +2,11 @@
 class ConfigManager {
     constructor() {
         // 支持环境变量和向后兼容性
+        // 优先使用环境变量（构建/服务器注入），其次尝试从浏览器全局变量回退（window.__SUPABASE_URL），
+        // 这样在静态托管或未使用构建工具时也能通过注入 window 变量来提供配置。
         this.supabaseConfig = {
-            // 优先使用环境变量，否则使用默认值
-            url: this.getEnvVar('VITE_SUPABASE_URL'),
-            anonKey: this.getEnvVar('VITE_SUPABASE_ANON_KEY')
+            url: this.getEnvVar('VITE_SUPABASE_URL') || (typeof window !== 'undefined' ? (window.__SUPABASE_URL || window.SUPABASE_URL || '') : ''),
+            anonKey: this.getEnvVar('VITE_SUPABASE_ANON_KEY') || (typeof window !== 'undefined' ? (window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '') : '')
         };
         
         // 默认AI提供商配置
@@ -58,15 +59,30 @@ class ConfigManager {
 
     // 获取Supabase客户端
     getSupabaseClient() {
-        if (!window.supabase) {
-            console.error('Supabase client not loaded');
+        // Return cached client if already created
+        if (this._client) return this._client;
+
+        // Resolve URL and anonKey at call time to pick up any runtime injections
+        const url = this.supabaseConfig?.url || (typeof window !== 'undefined' ? (window.__SUPABASE_URL || window.SUPABASE_URL || '') : '');
+        const anon = this.supabaseConfig?.anonKey || this.supabaseConfig?.anon_key || (typeof window !== 'undefined' ? (window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '') : '');
+
+        if (!url || !anon) {
+            console.error('Supabase client not initialized: url or anon key missing', { url, hasAnonKey: !!anon });
             return null;
         }
-        
-        return window.supabase.createClient(
-            this.supabaseConfig.url, 
-            this.supabaseConfig.anonKey
-        );
+
+        if (typeof window === 'undefined' || !window.supabase || typeof window.supabase.createClient !== 'function') {
+            console.error('Supabase library not available on window');
+            return null;
+        }
+
+        try {
+            this._client = window.supabase.createClient(url, anon);
+            return this._client;
+        } catch (err) {
+            console.error('Error creating Supabase client:', err);
+            return null;
+        }
     }
 
     // 加载用户AI配置

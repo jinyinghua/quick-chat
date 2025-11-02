@@ -87,6 +87,22 @@
 
         return null;
       };
+
+      // Also allow quick testing via URL query params, e.g. ?VITE_SUPABASE_URL=...&VITE_SUPABASE_ANON_KEY=...
+      try {
+        if (typeof window !== 'undefined' && window.location && window.location.search) {
+          const params = new URLSearchParams(window.location.search);
+          const qUrl = params.get('VITE_SUPABASE_URL') || params.get('SUPABASE_URL');
+          const qKey = params.get('VITE_SUPABASE_ANON_KEY') || params.get('SUPABASE_ANON_KEY');
+          if (qUrl || qKey) {
+            console.log('runtime-config: found supabase config in URL params');
+            if (qUrl) cfgMgr.supabaseConfig.url = qUrl;
+            if (qKey) cfgMgr.supabaseConfig.anonKey = qKey;
+          }
+        }
+      } catch (e) {
+        console.warn('runtime-config: error reading URL params', e);
+      }
     });
   } catch (err) {
     console.error('runtime-config shim error', err);
