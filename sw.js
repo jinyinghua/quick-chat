@@ -16,7 +16,9 @@ const STATIC_ASSETS = [
     '/chat.js',
     '/manifest.json',
     '/offline.html',
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+    // external CDN files can cause cache.addAll to fail in some environments;
+    // don't pre-cache them here to avoid aborting installation. They will be
+    // loaded by the page as needed.
 ];
 
 // API缓存策略
@@ -41,16 +43,29 @@ self.addEventListener('install', (event) => {
     console.log('[SW] Installing...');
     
     event.waitUntil(
-        Promise.all([
-            // 缓存静态资源
-            caches.open(STATIC_CACHE).then((cache) => {
-                console.log('[SW] Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
-            }),
-            
+        (async () => {
+            try {
+                const cache = await caches.open(STATIC_CACHE);
+                console.log('[SW] Caching static assets (best-effort)');
+                // Use best-effort caching: try to add all, but don't fail install
+                await Promise.all(STATIC_ASSETS.map(async (u) => {
+                    try {
+                        const resp = await fetch(u, { mode: 'no-cors' });
+                        // if response is opaque due to no-cors, still attempt to put
+                        if (resp.ok || resp.type === 'opaque') {
+                            await cache.put(u, resp.clone());
+                        }
+                    } catch (e) {
+                        console.warn('[SW] Failed to fetch static asset', u, e);
+                    }
+                }));
+            } catch (e) {
+                console.warn('[SW] Static caching failed during install', e);
+            }
+
             // 跳过等待，立即激活
-            self.skipWaiting()
-        ])
+            await self.skipWaiting();
+        })()
     );
 });
 
