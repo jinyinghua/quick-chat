@@ -5,8 +5,9 @@ class ConfigManager {
         // 优先使用环境变量（构建/服务器注入），其次尝试从浏览器全局变量回退（window.__SUPABASE_URL），
         // 这样在静态托管或未使用构建工具时也能通过注入 window 变量来提供配置。
         this.supabaseConfig = {
-            url: this.getEnvVar('VITE_SUPABASE_URL') || (typeof window !== 'undefined' ? (window.__SUPABASE_URL || window.SUPABASE_URL || '') : ''),
-            anonKey: this.getEnvVar('VITE_SUPABASE_ANON_KEY') || (typeof window !== 'undefined' ? (window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '') : '')
+            url: this.getEnvVar('__SUPABASE_URL') || (typeof window !== 'undefined' ? (window.__SUPABASE_URL || window.SUPABASE_URL || '') : ''),
+            // 支持多种命名：VITE_SUPABASE_ANON_KEY / SUPABASE_ANON_KEY / ANONKEY
+            anonKey: this.getEnvVar('__SUPABASE_ANON_KEY') || this.getEnvVar('SUPABASE_ANON_KEY') || this.getEnvVar('ANONKEY') || (typeof window !== 'undefined' ? (window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY || '') : '')
         };
         
         // 默认AI提供商配置
