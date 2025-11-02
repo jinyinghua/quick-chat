@@ -1,10 +1,11 @@
 // Supabase配置和API密钥管理
 class ConfigManager {
     constructor() {
+        // 支持环境变量和向后兼容性
         this.supabaseConfig = {
-            // 请替换为你的实际Supabase配置
-            url: 'YOUR_SUPABASE_URL',
-            anonKey: 'YOUR_SUPABASE_ANON_KEY'
+            // 优先使用环境变量，否则使用默认值
+            url: this.getEnvVar('VITE_SUPABASE_URL'),
+            anonKey: this.getEnvVar('VITE_SUPABASE_ANON_KEY')
         };
         
         // 默认AI提供商配置
@@ -12,20 +13,47 @@ class ConfigManager {
             openai: {
                 apiKey: '',
                 model: 'gpt-3.5-turbo',
-                temperature: 0.7,
-                maxTokens: 2000,
+                temperature: 0.8,
+                maxTokens: 200000,
                 baseURL: 'https://api.openai.com/v1'
             },
             gemini: {
                 apiKey: '',
                 model: 'gemini-pro',
                 temperature: 0.7,
-                maxTokens: 2000,
+                maxTokens: 200000,
                 baseURL: 'https://generativelanguage.googleapis.com/v1beta'
             }
         };
         
         this.currentAIConfig = { ...this.defaultAIConfigs };
+        
+        // 输出配置信息（开发模式）
+        if (this.getEnvVar('NODE_ENV') !== 'production') {
+            console.log('Supabase config loaded:', {
+                url: this.supabaseConfig.url,
+                hasAnonKey: !!this.supabaseConfig.anonKey,
+                envSource: this.supabaseConfig.url.includes('supabase') ? 'environment' : 'hardcoded'
+            });
+        }
+    }
+
+    // 获取环境变量
+    getEnvVar(key, defaultValue = '') {
+        // 支持多种环境变量读取方式
+        if (typeof process !== 'undefined' && process.env) {
+            return process.env[key] || defaultValue;
+        }
+        
+        // 在浏览器环境中，可能通过其他方式获取
+        if (typeof window !== 'undefined' && window.location) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has(key)) {
+                return urlParams.get(key);
+            }
+        }
+        
+        return defaultValue;
     }
 
     // 获取Supabase客户端
