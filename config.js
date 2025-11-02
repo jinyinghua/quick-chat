@@ -47,10 +47,37 @@ class ConfigManager {
         }
         
         // 在浏览器环境中，可能通过其他方式获取
-        if (typeof window !== 'undefined' && window.location) {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has(key)) {
-                return urlParams.get(key);
+        if (typeof window !== 'undefined') {
+            // 1) 支持从 URL 参数读取（方便测试：?VITE_SUPABASE_URL=...）
+            try {
+                if (window.location) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has(key)) {
+                        return urlParams.get(key);
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            // 2) 支持 runtime 注入的全局变量（index.html 或宿主注入）
+            //    window.__SUPABASE_URL / window.SUPABASE_URL
+            //    window.__SUPABASE_ANON_KEY / window.SUPABASE_ANON_KEY
+            try {
+                if ((key === 'VITE_SUPABASE_URL' || key === 'SUPABASE_URL') && (window.__SUPABASE_URL || window.SUPABASE_URL)) {
+                    return window.__SUPABASE_URL || window.SUPABASE_URL;
+                }
+
+                if ((key === 'VITE_SUPABASE_ANON_KEY' || key === 'SUPABASE_ANON_KEY') && (window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY)) {
+                    return window.__SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY;
+                }
+
+                // 3) 支持通过单一对象注入（一些宿主会把变量放到 window.__ENV）
+                if (window.__ENV && typeof window.__ENV[key] !== 'undefined') {
+                    return window.__ENV[key];
+                }
+            } catch (e) {
+                // ignore
             }
         }
         
