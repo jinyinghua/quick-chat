@@ -37,7 +37,7 @@
 ### 2. 克隆项目
 
 ```bash
-git clone https://github.com/jinyinghua/chat.git
+git clone https://github.com/jinyinghua/quick-chat.git
 cd ai-chat
 ```
 
