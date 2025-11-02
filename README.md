@@ -225,6 +225,59 @@ npx http-server
 3. 选择源分支 (main)
 4. 访问 `https://username.github.io/repository-name`
 
+### 🚀 Cloudflare Pages 部署指南
+
+#### 第二步：连接Cloudflare Pages
+1. 访问 [pages.cloudflare.com](https://pages.cloudflare.com)
+2. 使用您的Cloudflare账户登录（或先注册免费账户）
+3. 点击 "Create a project"
+4. 选择 "Connect to Git"
+
+#### 第三步：配置部署
+1. **连接仓库**：
+   - 选择您的GitHub仓库（需要先授权GitHub访问权限）
+   - 选择仓库中的 `/chat` 目录或整个仓库
+
+2. **构建设置**：
+   - **Project name**: `ai-chat` (或您喜欢的名称)
+   - **Production branch**: `main`
+   - **Build command**: `(留空)`
+   - **Build output directory**: `/`
+   - **Root directory**: `/` (如果您部署整个仓库)
+
+3. **环境变量**（可选）：
+   - 如果您希望使用环境变量而不是修改文件，可以添加：
+     - `VITE_SUPABASE_URL`: 您的Supabase项目URL
+     - `VITE_SUPABASE_ANON_KEY`: 您的Supabase匿名密钥
+
+#### 第四步：部署设置
+1. **Functions** 目录设置：`/` (留空，因为我们不需要Serverless Functions)
+2. **Headers 文件**：`/` (留空)
+3. **重定向规则**：`/` (留空)
+
+#### 第五步：部署完成
+1. 点击 "Save and Deploy"
+2. Cloudflare将开始部署过程（通常需要2-3分钟）
+3. 部署完成后，您将获得一个URL，例如：`https://ai-chat.pages.dev`
+
+#### 第六步：后置配置
+部署完成后您需要：
+1. **更新 config.js** 中的Supabase配置：
+   ```javascript
+   this.supabaseConfig = {
+       url: 'https://xxxxx.supabase.co',
+       anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+   };
+   ```
+
+2. **配置Supabase数据库**：
+   - 按照 `supabase-setup.md` 文件中的SQL脚本执行
+   - 创建必要的表和RLS策略
+
+3. **获取AI API密钥**并配置到应用设置中
+
+
+
 ## 🐛 故障排除
 
 ### 常见问题
