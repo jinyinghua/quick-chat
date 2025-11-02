@@ -30,14 +30,17 @@
         if (url) this.supabaseConfig.url = url;
         if (anonKey) this.supabaseConfig.anonKey = anonKey;
         // Try to recreate client if supabase lib available
-        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-          try {
-            this._client = window.supabase.createClient(this.supabaseConfig.url, this.supabaseConfig.anonKey);
-            return this._client;
-          } catch (e) {
-            console.warn('Could not create Supabase client after setSupabaseConfig', e);
+          if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+            try {
+              // only create client when url and anonKey are present
+              if (this.supabaseConfig.url && this.supabaseConfig.anonKey) {
+                this._client = window.supabase.createClient(this.supabaseConfig.url, this.supabaseConfig.anonKey);
+                return this._client;
+              }
+            } catch (e) {
+              console.warn('Could not create Supabase client after setSupabaseConfig', e);
+            }
           }
-        }
         return null;
       };
 
@@ -54,8 +57,11 @@
         // Prefer the global supabase (loaded from CDN) if available
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
           try {
-            this._client = window.supabase.createClient(url, anon);
-            return this._client;
+            // only attempt to create client when url and anon are provided
+            if (url && anon) {
+              this._client = window.supabase.createClient(url, anon);
+              return this._client;
+            }
           } catch (e) {
             console.warn('window.supabase.createClient failed:', e);
           }
