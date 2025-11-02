@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Chat - 离线</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .offline-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #10a37f, #0d8a6a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #10a37f;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #b4b4b4;
+        }
+
+        .offline-features {
+            text-align: left;
+            margin: 30px 0;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: #10a37f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 12px;
+        }
+
+        .retry-btn {
+            background: linear-gradient(135deg, #10a37f, #0d8a6a);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 163, 127, 0.3);
+        }
+
+        .network-status {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        .network-status.online {
+            background: rgba(16, 163, 127, 0.2);
+            border-color: rgba(16, 163, 127, 0.3);
+        }
+
+        .status-icon {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-icon.offline {
+            background: #e74c3c;
+        }
+
+        .status-icon.online {
+            background: #10a37f;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .offline-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">
+            💬
+        </div>
+        
+        <h1>Quick Chat 离线模式</h1>
+        
+        <p>您当前处于离线状态，无法连接到AI服务。但您仍然可以：</p>
+        
+        <div class="offline-features">
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <div>查看已缓存的聊天记录</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚙️</div>
+                <div>访问应用设置</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <div>使用已安装的PWA功能</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <div>网络恢复时自动同步</div>
+            </div>
+        </div>
+        
+        <div class="network-status" id="network-status">
+            <span class="status-icon offline"></span>
+            <span id="status-text">网络连接断开</span>
+        </div>
+        
+        <button class="retry-btn" onclick="retryConnection()">
+            重新连接
+        </button>
+    </div>
+
+    <script>
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('network-status');
+            const statusText = document.getElementById('status-text');
+            const statusIcon = statusElement.querySelector('.status-icon');
+            
+            if (navigator.onLine) {
+                statusElement.className = 'network-status online';
+                statusText.textContent = '网络连接已恢复';
+                statusIcon.className = 'status-icon online';
+            } else {
+                statusElement.className = 'network-status';
+                statusText.textContent = '网络连接断开';
+                statusIcon.className = 'status-icon offline';
+            }
+        }
+
+        function retryConnection() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            } else {
+                updateNetworkStatus();
+                alert('网络仍然不可用，请检查您的网络连接');
+            }
+        }
+
+        // 监听网络状态变化
+        window.addEventListener('online', () => {
+            updateNetworkStatus();
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        });
+
+        window.addEventListener('offline', updateNetworkStatus);
+
+        // 初始化网络状态
+        updateNetworkStatus();
+
+        // 定期检查网络状态
+        setInterval(updateNetworkStatus, 5000);
+    </script>
+</body>
+</html>

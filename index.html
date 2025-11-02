@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Quick Chat - 智能聊天助手</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>正在加载Quick Chat...</p>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">登录</button>
+                <button class="tab-btn" data-tab="register">注册</button>
+            </div>
+            
+            <form id="login-form" class="auth-form">
+                <h2>登录到Quick Chat</h2>
+                <input type="email" id="login-email" placeholder="邮箱地址" required>
+                <input type="password" id="login-password" placeholder="密码" required>
+                <button type="submit" class="btn-primary">登录</button>
+            </form>
+            
+            <form id="register-form" class="auth-form hidden">
+                <h2>注册Quick Chat</h2>
+                <input type="email" id="register-email" placeholder="邮箱地址" required>
+                <input type="password" id="register-password" placeholder="密码" required>
+                <input type="password" id="register-confirm" placeholder="确认密码" required>
+                <button type="submit" class="btn-primary">注册</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Quick Chat</h1>
+                <button id="new-chat-btn" class="btn-secondary">新对话</button>
+            </div>
+            
+            <div class="chat-list" id="chat-list">
+                <!-- Chat conversations will be loaded here -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <button id="settings-btn" class="sidebar-btn">设置</button>
+                <button id="logout-btn" class="sidebar-btn">退出登录</button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-area">
+            <!-- Chat Header -->
+            <header class="chat-header">
+                <div class="ai-provider-selector">
+                    <select id="ai-provider">
+                        <option value="openai">OpenAI GPT</option>
+                        <option value="gemini">Google Gemini</option>
+                    </select>
+                </div>
+                <button id="delete-chat-btn" class="btn-danger">删除对话</button>
+            </header>
+
+            <!-- Messages Container -->
+            <div class="messages-container" id="messages-container">
+                <div class="welcome-message">
+                    <h2>欢迎使用Quick Chat</h2>
+                    <p>选择AI提供商并开始你的智能对话之旅</p>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <form id="chat-form" class="chat-input-form">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="输入你的消息... (Shift+Enter换行)"
+                        rows="1"
+                        disabled
+                    ></textarea>
+                    <button type="submit" id="send-btn" class="btn-send" disabled>
+                        <span class="send-icon">➤</span>
+                    </button>
+                </form>
+                
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="typing-indicator hidden">
+                    <div class="typing-animation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>AI正在思考...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            
+            <div class="settings-content">
+                <!-- AI Provider Configuration -->
+                <div class="setting-section">
+                    <h3>AI提供商配置</h3>
+                    
+                    <div class="provider-config">
+                        <h4>OpenAI</h4>
+                        <input type="password" id="openai-key" placeholder="OpenAI API Key">
+                        <select id="openai-model">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        </select>
+                        <input type="number" id="openai-temp" placeholder="Temperature (0-1)" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <div class="provider-config">
+                        <h4>Google Gemini</h4>
+                        <input type="password" id="gemini-key" placeholder="Gemini API Key">
+                        <select id="gemini-model">
+                            <option value="gemini-pro">Gemini Pro</option>
+                            <option value="gemini-pro-vision">Gemini Pro Vision</option>
+                        </select>
+                        <input type="number" id="gemini-temp" placeholder="Temperature (0-1)" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <button id="save-config-btn" class="btn-primary">保存配置</button>
+                </div>
+                
+                <!-- App Settings -->
+                <div class="setting-section">
+                    <h3>应用设置</h3>
+                    <div class="setting-item">
+                        <label>主题</label>
+                        <select id="theme-selector">
+                            <option value="dark">深色</option>
+                            <option value="light">浅色</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>自动保存聊天记录</label>
+                        <input type="checkbox" id="auto-save" checked>
+                    </div>
+                    <div class="setting-item">
+                        <label>显示打字动画</label>
+                        <input type="checkbox" id="typing-animation" checked>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="cache-utils.js"></script>
+    <script src="auth.js"></script>
+    <script src="chat.js"></script>
+    <script src="script.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
